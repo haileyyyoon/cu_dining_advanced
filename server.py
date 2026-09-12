@@ -108,14 +108,28 @@ def _sanitize_find_food_args(args, user_message):
                                        "all of campus", "everywhere", "every campus"))
     if args.get("all_campuses") and not wants_all:
         args["all_campuses"] = False
-    # highlights (hide staples) is only valid for a generic browse. If the model set
-    # it while the query names a specific food, force it off so e.g. "vegan chocolate
-    # cake" isn't dropped as a "cake" staple.
-    generic = {"a good meal", "a good lunch", "a good dinner", "a good breakfast",
-               "good meal", "good food", "something good", "a satisfying meal",
-               "a satisfying breakfast", "a satisfying lunch", "a satisfying dinner"}
-    if args.get("highlights") and (args.get("query") or "").strip().lower() not in generic:
-        args["highlights"] = False
+    # Decide 'highlights' (the curated, staple-free, variety-balanced browse) from
+    # the USER'S message, not the model's arguments - the model is inconsistent about
+    # setting it. An open-ended ask => highlights ON with a clean query, so it always
+    # takes the same curated path as the "suggested for you" board.
+    open_ended = any(p in msg for p in (
+        "what's good", "whats good", "what looks good", "what's looking good",
+        "whats looking good", "what should i", "anything good", "something good",
+        "surprise me", "i'm hungry", "im hungry", "recommend", "suggestion",
+        "what do you", "good options", "what's for", "whats for",
+    ))
+    if open_ended:
+        args["highlights"] = True
+        args["query"] = "a good meal"
+    elif args.get("highlights"):
+        # A specific food was named but the model flagged a browse; keep highlights
+        # only if the query really is a generic browse phrase (else "vegan chocolate
+        # cake" would get dropped as a "cake" staple).
+        generic = {"a good meal", "a good lunch", "a good dinner", "a good breakfast",
+                   "good meal", "good food", "something good", "a satisfying meal",
+                   "a satisfying breakfast", "a satisfying lunch", "a satisfying dinner"}
+        if (args.get("query") or "").strip().lower() not in generic:
+            args["highlights"] = False
     return args
 
 

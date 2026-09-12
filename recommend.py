@@ -99,8 +99,8 @@ def _pick_for_tile(items, per_hall):
     return chosen
 
 
-def _build_highlights(safe_items, area, dietary, per_hall=4, min_per_hall=2, max_halls=6,
-                      hall_pool=8):
+def _build_highlights(safe_items, area, dietary, per_hall=5, min_per_hall=2, max_halls=6,
+                      hall_pool=10):
     """Build the general 'what's good' board directly from what each hall offers.
 
     Prefers the day's specials over everyday staples; fills each hall's tile with
