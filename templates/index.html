@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CU Dining+</title>
+<style>
+  :root {
+    --carnelian: #b31b1b;
+    --carnelian-dark: #8f1414;
+    --ink: #1c1c1e;
+    --muted: #6b7280;
+    --line: #e6e6ea;
+    --bg: #f6f5f3;
+    --card: #ffffff;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  header.app {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  header.app h1 { font-size: 20px; margin: 0; letter-spacing: -.2px; }
+  header.app h1 span { color: var(--carnelian); }
+  .ghost-btn {
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    padding: 7px 12px; border-radius: 999px; cursor: pointer; font-size: 13px;
+  }
+  .ghost-btn:hover { border-color: var(--carnelian); color: var(--carnelian); }
+
+  /* ---------- Onboarding ---------- */
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 26px; box-shadow: var(--shadow);
+  }
+  .card h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: -.3px; }
+  .card .sub { color: var(--muted); margin: 0 0 22px; }
+  .meal-row { margin-bottom: 18px; }
+  .meal-row .label { font-weight: 600; margin-bottom: 8px; }
+  .meal-row .label .emoji { margin-right: 6px; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    padding: 9px 16px; border-radius: 999px; cursor: pointer; font-size: 14px;
+    transition: all .12s ease;
+  }
+  .chip:hover { border-color: var(--carnelian); }
+  .chip.selected {
+    background: var(--carnelian); border-color: var(--carnelian); color: #fff;
+  }
+  .divider { height: 1px; background: var(--line); margin: 22px 0; }
+  .small-label { font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+  .hint { color: var(--muted); font-size: 12px; margin: 4px 0 8px; }
+  .primary-btn {
+    margin-top: 22px; width: 100%; background: var(--carnelian); color: #fff;
+    border: 0; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600;
+    cursor: pointer;
+  }
+  .primary-btn:hover { background: var(--carnelian-dark); }
+  .primary-btn:disabled { background: #cdcdd2; cursor: not-allowed; }
+
+  /* ---------- Main / ask ---------- */
+  .ask-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .ask-row input {
+    flex: 1; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
+    font-size: 15px; background: #fff;
+  }
+  .ask-row input:focus { outline: none; border-color: var(--carnelian); }
+  .ask-row button {
+    background: var(--carnelian); color: #fff; border: 0; padding: 0 22px;
+    border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .ask-row button:hover { background: var(--carnelian-dark); }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .examples .ex {
+    font-size: 12.5px; color: var(--muted); border: 1px dashed var(--line);
+    padding: 5px 11px; border-radius: 999px; cursor: pointer; background: #fff;
+  }
+  .examples .ex:hover { color: var(--carnelian); border-color: var(--carnelian); }
+
+  .reply {
+    display: none; background: #fff; border: 1px solid var(--line);
+    border-left: 3px solid var(--carnelian); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 18px;
+  }
+  .reply .ctx { font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--carnelian); font-weight: 700; margin-bottom: 3px; }
+  .reply .text { font-size: 15px; }
+
+  /* ---------- Tiles ---------- */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .tiles { grid-template-columns: 1fr; } }
+  .tile {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column;
+    animation: pop .18s ease;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .tile .head {
+    background: var(--carnelian); color: #fff; padding: 14px 16px;
+  }
+  .tile .head .name { font-size: 17px; font-weight: 700; letter-spacing: -.2px; }
+  .tile .head .meta { font-size: 12px; opacity: .9; margin-top: 2px; }
+  .tile .head .why { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .why-chip {
+    font-size: 10.5px; font-weight: 600; background: rgba(255,255,255,.22);
+    color: #fff; padding: 2px 8px; border-radius: 999px; letter-spacing: .2px;
+  }
+  .tile ul { list-style: none; margin: 0; padding: 8px 0; }
+  .tile li { padding: 9px 16px; border-bottom: 1px solid #f1f1f4; }
+  .tile li:last-child { border-bottom: 0; }
+  .tile li .cat { font-size: 11px; text-transform: uppercase; letter-spacing: .4px;
+    color: var(--muted); }
+  .tile li .dish { font-size: 14.5px; }
+
+  .empty, .loading { text-align: center; color: var(--muted); padding: 50px 20px; }
+  .spinner {
+    width: 26px; height: 26px; border: 3px solid var(--line);
+    border-top-color: var(--carnelian); border-radius: 50%;
+    margin: 0 auto 12px; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .tile { cursor: pointer; transition: transform .1s ease, box-shadow .1s ease; }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.08), 0 14px 34px rgba(0,0,0,.08); }
+  .tile .more {
+    text-align: center; padding: 10px; font-size: 12.5px; font-weight: 600;
+    color: var(--carnelian); border-top: 1px solid #f1f1f4; margin-top: auto;
+  }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(20,20,25,.5);
+    display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+    animation: fade .15s ease;
+  }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--card); border-radius: 18px; width: 100%; max-width: 520px;
+    max-height: 82vh; display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3); position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 12px; right: 14px; background: rgba(255,255,255,.2);
+    border: 0; color: #fff; font-size: 26px; line-height: 1; width: 34px; height: 34px;
+    border-radius: 50%; cursor: pointer;
+  }
+  .modal-close:hover { background: rgba(255,255,255,.35); }
+  .modal-head { background: var(--carnelian); color: #fff; padding: 18px 20px; }
+  .modal-title { font-size: 20px; font-weight: 700; }
+  .modal-sub { font-size: 13px; opacity: .9; margin-top: 2px; }
+  .modal-body { padding: 6px 20px 18px; overflow-y: auto; }
+  .cat-block { padding: 12px 0; border-bottom: 1px solid #f1f1f4; }
+  .cat-block:last-child { border-bottom: 0; }
+  .cat-name { font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+  .cat-items { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dish-pill { background: #f4f2f0; border-radius: 8px; padding: 5px 10px; font-size: 13.5px; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ ONBOARDING ============ -->
+  <section id="onboarding" hidden>
+    <div class="card">
+      <h2>Where do you usually eat? 🍽️</h2>
+      <p class="sub">Pick your go-to campus for each meal — choose more than one if you like. I'll recommend there by default, based on the time you ask.</p>
+
+      <div id="meal-picks"></div>
+
+      <div class="divider"></div>
+      <div class="small-label">Dietary (optional)</div>
+      <div class="opts" id="dietary-opts"></div>
+
+      <div class="small-label" style="margin-top:18px;">Allergies (optional)</div>
+      <p class="hint">I'll always hide dishes that mention these.</p>
+      <div class="opts" id="allergy-opts"></div>
+
+      <button class="primary-btn" id="start-btn" disabled>Get started</button>
+    </div>
+  </section>
+
+  <!-- ============ MAIN ============ -->
+  <section id="main" hidden>
+    <header class="app">
+      <h1>CU <span>Dining+</span></h1>
+      <button class="ghost-btn" id="prefs-btn">Preferences</button>
+    </header>
+
+    <div class="ask-row">
+      <input id="ask-input" placeholder="e.g. something with meat for dinner" autocomplete="off">
+      <button id="ask-btn">Ask</button>
+    </div>
+    <div class="examples" id="examples"></div>
+
+    <div class="reply" id="reply">
+      <div class="ctx" id="reply-ctx"></div>
+      <div class="text" id="reply-text"></div>
+    </div>
+
+    <div id="results">
+      <div class="empty" id="empty">Ask me what you're craving and I'll fill the board with spots that have it. 👆</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ FULL-MENU MODAL ============ -->
+<div class="overlay" id="overlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Menu</div>
+      <div class="modal-sub" id="modal-sub"></div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const CAMPUSES = ["North", "West", "Central"];
+const MEALS = [
+  { key: "breakfast", label: "Breakfast", emoji: "🥞" },
+  { key: "lunch",     label: "Lunch",     emoji: "🥪" },
+  { key: "dinner",    label: "Dinner",    emoji: "🍜" },
+];
+const DIETARY = ["Vegetarian", "Vegan", "Halal", "Gluten-free"];
+const ALLERGENS = ["Peanuts", "Tree nuts", "Shellfish", "Dairy", "Eggs", "Soy", "Gluten"];
+const EXAMPLES = [
+  "what's at morrison for dinner?",
+  "healthy lunch options",
+  "where's pizza right now?",
+  "vegetarian dinner anywhere",
+];
+
+function freshMeals() { return { breakfast: new Set(), lunch: new Set(), dinner: new Set() }; }
+const state = { meals: freshMeals(), dietary: new Set(), allergies: new Set() };
+
+const $ = (id) => document.getElementById(id);
+
+/* ---------- Onboarding rendering ---------- */
+function buildOnboarding() {
+  const mp = $("meal-picks");
+  mp.innerHTML = "";
+  MEALS.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "meal-row";
+    row.innerHTML = `<div class="label"><span class="emoji">${m.emoji}</span>${m.label}</div>`;
+    const opts = document.createElement("div");
+    opts.className = "opts";
+    CAMPUSES.forEach(c => {
+      const b = document.createElement("button");
+      b.className = "chip"; b.textContent = c;
+      const set = state.meals[m.key];
+      if (set.has(c)) b.classList.add("selected");  // reflect saved choice
+      b.onclick = () => {
+        if (set.has(c)) { set.delete(c); b.classList.remove("selected"); }
+        else { set.add(c); b.classList.add("selected"); }
+        refreshStart();
+      };
+      opts.appendChild(b);
+    });
+    row.appendChild(opts);
+    mp.appendChild(row);
+  });
+
+  fillChips("dietary-opts", DIETARY, state.dietary);
+  fillChips("allergy-opts", ALLERGENS, state.allergies);
+  refreshStart();  // reflect any pre-selected (saved) choices in the button state
+}
+
+function fillChips(containerId, items, set) {
+  const c = $(containerId);
+  c.innerHTML = "";
+  items.forEach(label => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = label;
+    if (set.has(label)) b.classList.add("selected");  // reflect saved choice
+    b.onclick = () => {
+      if (set.has(label)) { set.delete(label); b.classList.remove("selected"); }
+      else { set.add(label); b.classList.add("selected"); }
+    };
+    c.appendChild(b);
+  });
+}
+
+function refreshStart() {
+  const anyMeal = MEALS.some(m => state.meals[m.key].size > 0);
+  $("start-btn").disabled = !anyMeal;
+}
+
+async function submitOnboarding() {
+  $("start-btn").disabled = true;
+  $("start-btn").textContent = "Saving...";
+  await fetch("/api/onboarding", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      breakfast: [...state.meals.breakfast],
+      lunch: [...state.meals.lunch],
+      dinner: [...state.meals.dinner],
+      dietary: [...state.dietary].map(s => s.toLowerCase()),
+      allergies: [...state.allergies].map(s => s.toLowerCase()),
+    }),
+  });
+  showMain();
+}
+
+/* ---------- Main / ask ---------- */
+function buildExamples() {
+  const e = $("examples");
+  e.innerHTML = "";
+  EXAMPLES.forEach(text => {
+    const b = document.createElement("button");
+    b.className = "ex"; b.textContent = text;
+    b.onclick = () => { $("ask-input").value = text; ask(); };
+    e.appendChild(b);
+  });
+}
+
+async function ask() {
+  const input = $("ask-input");
+  const message = input.value.trim();
+  if (!message) return;
+
+  const emptyEl = $("empty");
+  if (emptyEl) emptyEl.hidden = true;  // #empty may already be replaced by results
+  $("results").innerHTML = `<div class="loading"><div class="spinner"></div>Checking live menus…</div>`;
+  $("reply").style.display = "none";
+
+  let data;
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    data = await res.json();
+  } catch (e) {
+    $("results").innerHTML = `<div class="empty">Something went wrong. Try again.</div>`;
+    return;
+  }
+
+  renderReply(data);
+  renderTiles(data.tiles || []);
+}
+
+function renderReply(data) {
+  const reply = $("reply");
+  const ctx = data.context || {};
+  if (data.reply) {
+    let ctxLine = "";
+    if (ctx.suggested) ctxLine = "suggested for you";
+    else if (ctx.meal && ctx.region) ctxLine = `${ctx.meal} · ${ctx.region}`;
+    $("reply-ctx").textContent = ctxLine;
+    $("reply-ctx").style.display = ctxLine ? "block" : "none";
+    $("reply-text").textContent = data.reply;
+    reply.style.display = "block";
+  } else {
+    reply.style.display = "none";
+  }
+}
+
+function renderTiles(tiles) {
+  const r = $("results");
+  if (!tiles.length) {
+    r.innerHTML = `<div class="empty">No matching spots open for that. Try another time or "anywhere".</div>`;
+    return;
+  }
+  r.innerHTML = `<div class="tiles"></div>`;
+  const grid = r.querySelector(".tiles");
+  tiles.forEach(t => {
+    const el = document.createElement("div");
+    el.className = "tile";
+    let serving = "";
+    if (t.starts_at && t.closes_at) serving = `serving ${t.starts_at}–${t.closes_at}`;
+    else if (t.closes_at) serving = "until " + t.closes_at;
+    const meta = [t.campus_area, t.meal, serving].filter(Boolean).join(" · ");
+    const items = t.items.map(i => `
+      <li>
+        ${i.category ? `<div class="cat">${i.category}</div>` : ""}
+        <div class="dish">${i.item}</div>
+      </li>`).join("");
+    const why = (t.why || []).map(w => `<span class="why-chip">${w}</span>`).join("");
+    el.innerHTML = `
+      <div class="head">
+        <div class="name">${t.hall}</div>
+        <div class="meta">${meta}</div>
+        ${why ? `<div class="why">${why}</div>` : ""}
+      </div>
+      <ul>${items}</ul>
+      <div class="more">View full menu →</div>`;
+    el.onclick = () => openMenu(t);
+    grid.appendChild(el);
+  });
+}
+
+/* ---------- Full-menu modal ---------- */
+async function openMenu(tile) {
+  $("modal-title").textContent = tile.hall;
+  const serving = (tile.starts_at && tile.closes_at) ? `serving ${tile.starts_at}–${tile.closes_at}`
+    : (tile.closes_at ? "until " + tile.closes_at : "");
+  $("modal-sub").textContent = [tile.campus_area, tile.meal, serving].filter(Boolean).join(" · ");
+  $("modal-body").innerHTML = `<div class="loading"><div class="spinner"></div>Loading full menu…</div>`;
+  $("overlay").hidden = false;
+
+  let data;
+  try {
+    const res = await fetch("/api/menu", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hall: tile.hall, hour: tile.hour, minute: tile.minute, day_offset: tile.day_offset }),
+    });
+    data = await res.json();
+  } catch (e) {
+    $("modal-body").innerHTML = `<div class="empty">Couldn't load the menu. Try again.</div>`;
+    return;
+  }
+
+  const cats = data.categories || [];
+  if (!cats.length) {
+    $("modal-body").innerHTML = `<div class="empty">No itemized menu available for this time.</div>`;
+    return;
+  }
+  $("modal-body").innerHTML = cats.map(c => `
+    <div class="cat-block">
+      <div class="cat-name">${c.category || "Menu"}</div>
+      <div class="cat-items">${(c.items || []).map(i => `<span class="dish-pill">${i}</span>`).join("")}</div>
+    </div>`).join("");
+}
+
+function closeMenu() { $("overlay").hidden = true; }
+
+/* ---------- View switching ---------- */
+function showOnboarding() { $("onboarding").hidden = false; $("main").hidden = true; buildOnboarding(); }
+function showMain() { $("onboarding").hidden = true; $("main").hidden = false; loadSuggestions(); }
+
+async function loadSuggestions() {
+  const emptyEl = $("empty");
+  if (emptyEl) emptyEl.hidden = true;
+  $("results").innerHTML = `<div class="loading"><div class="spinner"></div>Finding things you'll like…</div>`;
+  $("reply").style.display = "none";
+  let data;
+  try {
+    data = await (await fetch("/api/suggest")).json();
+  } catch (e) {
+    $("results").innerHTML = `<div class="empty">Ask me what you're craving. 👆</div>`;
+    return;
+  }
+  renderReply(data);
+  renderTiles(data.tiles || []);
+}
+
+// Populate `state` from the saved profile, matching saved values to chip labels
+// (saved dietary/allergies are lowercased) so the right buttons show as selected.
+function loadProfileIntoState(prof) {
+  state.meals = freshMeals();
+  MEALS.forEach(m => {
+    ((prof.meal_locations || {})[m.key] || []).forEach(c => {
+      const match = CAMPUSES.find(x => x.toLowerCase() === String(c).toLowerCase());
+      if (match) state.meals[m.key].add(match);
+    });
+  });
+  const pick = (saved, options) => {
+    const set = new Set();
+    (saved || []).forEach(v => {
+      const match = options.find(x => x.toLowerCase() === String(v).toLowerCase());
+      if (match) set.add(match);
+    });
+    return set;
+  };
+  state.dietary = pick(prof.dietary, DIETARY);
+  state.allergies = pick(prof.allergies, ALLERGENS);
+}
+
+async function openPreferences() {
+  try {
+    const prof = await (await fetch("/api/profile")).json();
+    loadProfileIntoState(prof);
+  } catch (e) {
+    state.meals = freshMeals(); state.dietary = new Set(); state.allergies = new Set();
+  }
+  $("start-btn").textContent = "Save preferences";
+  showOnboarding();
+}
+
+async function init() {
+  buildExamples();
+  const prof = await (await fetch("/api/profile")).json();
+  if (prof.needs_onboarding) showOnboarding();
+  else showMain();
+
+  $("start-btn").onclick = submitOnboarding;
+  $("ask-btn").onclick = ask;
+  $("ask-input").addEventListener("keydown", e => { if (e.key === "Enter") ask(); });
+  $("prefs-btn").onclick = openPreferences;
+
+  $("modal-close").onclick = closeMenu;
+  $("overlay").onclick = (e) => { if (e.target.id === "overlay") closeMenu(); };
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+}
+
+init();
+</script>
+</body>
+</html>

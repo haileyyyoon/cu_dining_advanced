@@ -1,0 +1,20 @@
+# Secrets - NEVER commit
+.env
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Runtime caches (regenerated automatically)
+embeddings_cache.json
+query_cache.json
+
+# Per-user state (starts fresh on the server)
+preferences.json
+
+# Unused data snapshot / local tooling
+eateries_full.json
+.claude/
+.DS_Store
